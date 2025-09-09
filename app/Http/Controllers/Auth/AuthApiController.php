@@ -4,13 +4,36 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 use function Illuminate\Log\log;
 
-class LoginApiController extends Controller
+class AuthApiController extends Controller
 {
+    /**
+     * Check username availability
+     */
+    public function index(string $username)
+    {
+        try {
+            if (strlen($username) == 0) {
+                return response()->json(['error' => 'err_empty_field'], 400);
+            }
+
+            $user = User::where('username', $username)->first();
+            if ($user != null) {
+                return response()->json(['error' => 'err_duplicate_username'], 422);
+            }
+
+            return response()->json(['message' => 'username available']);
+        } catch (\Throwable $e) {
+            log($e->getMessage());
+            return response()->json(['error' => 'err_unknown'], 500);
+        }
+    }
+
     /**
      * Sign in with password.
      */
@@ -18,6 +41,7 @@ class LoginApiController extends Controller
     {
         try {
             $request->authenticate();
+
             return response()->json(['message' => 'success']);
         } catch (ValidationException $e) {
             if ($e->getMessage() == 'These credentials do not match our records.') {

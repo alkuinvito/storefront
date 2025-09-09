@@ -19,9 +19,12 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
     ];
+
+    protected $attributes = ['is_done_onboarding' => false];
 
     /**
      * The attributes that should be hidden for serialization.
