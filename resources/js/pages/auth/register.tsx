@@ -9,66 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
-import axios, { AxiosError } from 'axios';
-import { useCallback, useRef, useState } from 'react';
 
 export default function Register() {
-    const [usernameLoading, setUsernameLoading] = useState(false);
-    const [usernameStatus, setUsernameStatus] = useState({ success: false, message: '' });
-    const debounceRef = useRef<NodeJS.Timeout>(undefined);
-
-    const checkUsername = (username: string) => {
-        try {
-            setUsernameLoading(true);
-            axios
-                .get('/api/auth/username/' + username)
-                .then(() => {
-                    setUsernameStatus({ success: true, message: 'Username available' });
-                })
-                .catch((e) => {
-                    if (e instanceof AxiosError) {
-                        switch (e.status) {
-                            case 400:
-                                setUsernameStatus({ success: false, message: 'Username cannot be empty' });
-                                break;
-                            case 422:
-                                setUsernameStatus({ success: false, message: 'Username already taken' });
-                                break;
-                            default:
-                                setUsernameStatus({ success: false, message: 'Unknown error' });
-                                break;
-                        }
-                    } else {
-                        console.error(e);
-                        setUsernameStatus({ success: false, message: 'Unknown error' });
-                    }
-                })
-                .finally(() => {
-                    setUsernameLoading(false);
-                });
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
-    const debouncedCheckUsername = useCallback((username: string) => {
-        // Clear the previous timeout
-        if (debounceRef.current) {
-            clearTimeout(debounceRef.current);
-        }
-
-        // Don't check empty usernames
-        if (!username.trim()) {
-            setUsernameStatus({ success: false, message: '' });
-            setUsernameLoading(false);
-            return;
-        }
-
-        debounceRef.current = setTimeout(() => {
-            checkUsername(username);
-        }, 500);
-    }, []);
-
     return (
         <AuthLayout title="Create an account" description="Enter your details below to create your account">
             <Head title="Register" />
@@ -85,33 +27,6 @@ export default function Register() {
                                 <Label htmlFor="name">Name</Label>
                                 <Input id="name" type="text" required autoFocus tabIndex={1} autoComplete="off" name="name" placeholder="Full name" />
                                 <InputError message={errors.name} className="mt-2" />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="username">Username</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        id="username"
-                                        type="text"
-                                        required
-                                        tabIndex={2}
-                                        autoComplete="off"
-                                        name="username"
-                                        placeholder="Username"
-                                        onChange={(e) => {
-                                            debouncedCheckUsername(e.target.value);
-                                        }}
-                                    />
-                                </div>
-                                <div>
-                                    {usernameLoading ? (
-                                        <LoaderCircle className="mt-2 size-4 animate-spin" />
-                                    ) : (!usernameStatus.success && Boolean(usernameStatus.message)) || Boolean(errors.username) ? (
-                                        <InputError message={errors.username || usernameStatus.message} className="mt-2" />
-                                    ) : usernameStatus.message ? (
-                                        <span className="mt-2 text-sm text-green-600 dark:text-green-400">{usernameStatus.message}</span>
-                                    ) : null}
-                                </div>
                             </div>
 
                             <div className="grid gap-2">

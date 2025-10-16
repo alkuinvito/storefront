@@ -2,36 +2,46 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Exceptions\ApiErrorCode;
+use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-
-use function Illuminate\Log\log;
 
 class AuthApiController extends Controller
 {
     /**
-     * Check username availability
+     * Register a new user.
      */
-    public function index(string $username)
+    public function create(Request $request)
     {
-        try {
-            if (strlen($username) == 0) {
-                return response()->json(['error' => 'err_empty_field'], 400);
-            }
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
+            'password' => ['required'],
+        ]);
 
-            $user = User::where('username', $username)->first();
-            if ($user != null) {
-                return response()->json(['error' => 'err_duplicate_username'], 422);
-            }
-
-            return response()->json(['message' => 'username available']);
-        } catch (\Throwable $e) {
-            log($e->getMessage());
-            return response()->json(['error' => 'err_unknown'], 500);
+        if ($validator->fails()) {
+            throw new ApiException(ApiErrorCode::ErrValidation, 'Validation failed', 422, $validator->errors()->getMessages());
         }
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        event(new Registered($user));
+
+        Auth::login($user);
+
+        return response()->json(['data' => 'User created successfully'], 201);
     }
 
     /**
@@ -42,14 +52,16 @@ class AuthApiController extends Controller
         try {
             $request->authenticate();
 
-            return response()->json(['message' => 'success']);
+            $user = Auth::user();
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json(['data' => ['token' => $token, 'user' => $user]]);
         } catch (ValidationException $e) {
             if ($e->getMessage() == 'These credentials do not match our records.') {
-                return response()->json(['message' => 'auth_error'], 401);
+                throw new ApiException(ApiErrorCode::ErrUnauthorized, 'Invalid credentials', 401);
             }
 
-            log($e->getMessage());
-            return response()->json(['message' => 'unknown_error'], 500);
+            throw $e;
         }
     }
 
@@ -59,16 +71,14 @@ class AuthApiController extends Controller
     public function destroy(Request $request)
     {
         try {
-
             $request->user()->tokens()->delete();
-            return response()->json(['message' => 'success']);
+            return response()->json(['data' => 'User logged out successfully']);
         } catch (\Throwable $e) {
             if ($e->getMessage() == 'Call to a member function tokens() on null') {
-                return response()->json(['message' => 'auth_error'], 401);
+                throw new ApiException(ApiErrorCode::ErrUnauthorized, 'Invalid auth token', 401);
             }
 
-            log($e->getMessage());
-            return response()->json(['message' => 'unknown_error'], 500);
+            throw $e;
         }
     }
 }
