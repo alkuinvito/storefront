@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefronts;
 use App\Exceptions\ApiErrorCode;
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
+use App\Models\Storefront;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -58,17 +59,15 @@ class StorefrontApiController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Storefront $storefront)
     {
-        $storefront = $this->storefrontService->getStorefrontById($id);
-
         return response()->json(['data' => $storefront]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Storefront $storefront)
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
@@ -80,13 +79,7 @@ class StorefrontApiController extends Controller
             throw new ApiException(ApiErrorCode::ErrValidation, null, 422, $validator->errors()->getMessages());
         }
 
-        $user = Auth::user();
-
-        if ($user == null) {
-            throw new ApiException(ApiErrorCode::ErrUnauthorized);
-        }
-
-        $this->storefrontService->updateStorefront($user, $id, $request->only(['title', 'theme', 'is_published']));
+        $this->storefrontService->updateStorefront($request, $storefront);
 
         return response()->json(['data' => 'Storefront updated successfully'], 200);
     }
@@ -94,15 +87,9 @@ class StorefrontApiController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Storefront $storefront)
     {
-        $user = Auth::user();
-
-        if ($user == null) {
-            throw new ApiException(ApiErrorCode::ErrUnauthorized);
-        }
-
-        $this->storefrontService->deleteStorefront($user, $id);
+        $this->storefrontService->deleteStorefront($storefront);
 
         return response()->json(['data' => 'Storefront deleted successfully'], 200);
     }

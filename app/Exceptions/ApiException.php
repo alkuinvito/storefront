@@ -7,8 +7,8 @@ use Exception;
 enum ApiErrorCode: string
 {
     case ErrBadRequest = 'Bad request';
-    case ErrForbidden = 'Forbidden';
-    case ErrUnauthorized = 'Unauthorized request';
+    case ErrForbidden = 'This action is unauthorized';
+    case ErrUnauthorized = 'Unauthenticated request';
     case ErrNotFound = 'Resource not found';
     case ErrMethodNotAllowed = 'Request method not allowed';
     case ErrValidation = 'Validation error';

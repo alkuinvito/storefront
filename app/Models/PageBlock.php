@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PageBlock extends Model
 {
-    protected $fillable = ['storefront_id', 'type', 'content', 'is_active'];
+    protected $fillable = ['type', 'index', 'content', 'is_active'];
 
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = ['content' => 'array', 'is_active' => 'boolean'];
 
     /**
      * Get block's parent.

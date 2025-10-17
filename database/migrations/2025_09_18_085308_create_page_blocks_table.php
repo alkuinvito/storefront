@@ -18,7 +18,8 @@ return new class extends Migration
                 ->onDelete('cascade');
 
             $table->string('type');
-            $table->string('content');
+            $table->integer('index');
+            $table->jsonb('content');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

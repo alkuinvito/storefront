@@ -2,11 +2,9 @@
 
 namespace App\Services;
 
-use App\Exceptions\ApiErrorCode;
-use App\Exceptions\ApiException;
 use App\Models\Storefront;
 use App\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
 
 class StorefrontService
 {
@@ -17,23 +15,9 @@ class StorefrontService
         return $user->storefronts()->create($data);
     }
 
-    public function deleteStorefront(User $user, string $id)
+    public function deleteStorefront(Storefront $storefront)
     {
-        try {
-            $storefront = $user->storefronts()->where('id', (int)$id)->firstOrFail();
-            $storefront->delete();
-        } catch (ModelNotFoundException) {
-            throw new ApiException(ApiErrorCode::ErrNotFound, 'Storefront not found', 404);
-        }
-    }
-
-    public function getStorefrontById(string $id)
-    {
-        try {
-            return Storefront::findOrFail((int)$id);
-        } catch (ModelNotFoundException) {
-            throw new ApiException(ApiErrorCode::ErrNotFound, 'Storefront not found', 404);
-        }
+        $storefront->delete();
     }
 
     public function getStorefronts(User $user)
@@ -41,15 +25,9 @@ class StorefrontService
         return $user->storefronts()->paginate(15);
     }
 
-    public function updateStorefront(User $user, string $id, array $data)
+    public function updateStorefront(Request $request, Storefront $storefront)
     {
-        try {
-            $storefront = $user->storefronts()->where('id', (int)$id)->firstOrFail();
-            $storefront->update($data);
-
-            return $storefront;
-        } catch (ModelNotFoundException) {
-            throw new ApiException(ApiErrorCode::ErrNotFound, 'Storefront not found', 404);
-        }
+        $storefront->update($request->only(['title', 'theme', 'is_published']));
+        return $storefront;
     }
 }
