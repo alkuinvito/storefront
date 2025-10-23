@@ -11,9 +11,14 @@ class Storefront extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['subdomain', 'title', 'theme', 'is_published'];
+    protected $fillable = ['slug', 'title', 'theme', 'is_published'];
 
     protected $casts = ['is_published' => 'boolean'];
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 
     /**
      * Get storefront's owner.

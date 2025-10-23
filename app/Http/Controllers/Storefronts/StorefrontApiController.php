@@ -9,7 +9,7 @@ use App\Models\Storefront;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use App\Services\StorefrontService;
+use App\Services\Storefronts\StorefrontService;
 
 class StorefrontApiController extends Controller
 {
@@ -20,9 +20,12 @@ class StorefrontApiController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
-        if ($user == null) {
-            throw new ApiException(ApiErrorCode::ErrUnauthorized);
+        $user = Auth::check() ? Auth::user() : null;
+        $isGuest = $user == null;
+
+        if ($isGuest) {
+            $storefronts = $this->storefrontService->getPublicStorefronts();
+            return response()->json(['data' => $storefronts]);
         }
 
         $storefronts = $this->storefrontService->getStorefronts($user);
@@ -36,7 +39,7 @@ class StorefrontApiController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'subdomain' => 'required|string|unique:storefronts,subdomain|regex:/^[a-zA-Z0-9-]{3,50}$/',
+            'slug' => 'required|string|unique:storefronts,slug|regex:/^[a-zA-Z0-9-]{3,50}$/',
             'title' => 'required|string|max:255',
             'theme' => 'nullable|string',
         ]);
@@ -51,7 +54,7 @@ class StorefrontApiController extends Controller
             throw new ApiException(ApiErrorCode::ErrUnauthorized);
         }
 
-        $this->storefrontService->createStorefront($user, $request->only(['subdomain', 'title', 'theme']));
+        $this->storefrontService->createStorefront($user, $request->only(['slug', 'title', 'theme']));
 
         return response()->json(['data' => 'Storefront created successfully'], 201);
     }
@@ -61,6 +64,15 @@ class StorefrontApiController extends Controller
      */
     public function show(Storefront $storefront)
     {
+        $user = Auth::check() ? Auth::user() : null;
+        $storefront = $this->storefrontService->getPublicStorefrontBySlug($storefront->slug);
+        $isAuthorized = $user != null && $storefront->user_id == $user?->id;
+
+        if (!$isAuthorized) {
+            return response()->json(['data' => $storefront]);
+        }
+
+        $storefront = $this->storefrontService->getStorefrontBySlug($storefront->slug);
         return response()->json(['data' => $storefront]);
     }
 

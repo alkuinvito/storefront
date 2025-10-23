@@ -11,8 +11,11 @@ Route::prefix('/auth')->group(function () {
     Route::middleware('auth:sanctum')->post('/signout', [AuthApiController::class, 'destroy']);
 });
 
-Route::prefix('/dashboard')->middleware('auth:sanctum')->group(function () {
-    Route::apiResource('storefronts', StorefrontApiController::class)->only(['index', 'store']);
-    Route::apiResource('storefronts', StorefrontApiController::class)->only(['show', 'update', 'destroy'])->middleware('can:manage,storefront');
-    Route::apiResource('storefronts.blocks', PageBlockApiController::class)->middleware('can:manage,storefront');
+Route::prefix('/dashboard')->group(function () {
+    Route::apiResource('storefronts', StorefrontApiController::class)->only(['index', 'show']);
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::apiResource('storefronts', StorefrontApiController::class)->only(['store']);
+        Route::apiResource('storefronts', StorefrontApiController::class)->only(['update', 'destroy'])->middleware('can:manage,storefront');
+        Route::apiResource('storefronts.blocks', PageBlockApiController::class)->middleware('can:manage,storefront');
+    });
 });

@@ -13,6 +13,8 @@ enum ApiErrorCode: string
     case ErrMethodNotAllowed = 'Request method not allowed';
     case ErrValidation = 'Validation error';
     case ErrUnknown = 'Unknown error';
+
+    case ErrRevalidate = 'Failed to sync storefront';
 }
 
 /**

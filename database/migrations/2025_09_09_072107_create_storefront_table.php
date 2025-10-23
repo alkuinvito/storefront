@@ -18,7 +18,7 @@ return new class extends Migration
                 ->constrained()
                 ->onDelete('cascade');
 
-            $table->string('subdomain')->unique();
+            $table->string('slug')->unique();
             $table->string('title');
             $table->string('theme')->default('basic');
             $table->boolean('is_published')->default(false);
