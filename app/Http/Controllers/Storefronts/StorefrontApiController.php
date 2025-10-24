@@ -20,7 +20,7 @@ class StorefrontApiController extends Controller
      */
     public function index()
     {
-        $user = Auth::check() ? Auth::user() : null;
+        $user = Auth::guard('sanctum')->user();
         $isGuest = $user == null;
 
         if ($isGuest) {
@@ -64,7 +64,7 @@ class StorefrontApiController extends Controller
      */
     public function show(Storefront $storefront)
     {
-        $user = Auth::check() ? Auth::user() : null;
+        $user = Auth::guard('sanctum')->user();
         $storefront = $this->storefrontService->getPublicStorefrontBySlug($storefront->slug);
         $isAuthorized = $user != null && $storefront->user_id == $user?->id;
 

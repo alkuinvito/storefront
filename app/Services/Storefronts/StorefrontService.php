@@ -2,15 +2,13 @@
 
 namespace App\Services\Storefronts;
 
-use App\Exceptions\ApiErrorCode;
-use App\Exceptions\ApiException;
 use App\Models\Storefront;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
-use function Illuminate\Log\log;
+use function Illuminate\Support\defer;
 
 class StorefrontService
 {
@@ -19,7 +17,7 @@ class StorefrontService
     public function createStorefront(User $user, array $data)
     {
         $created =  $user->storefronts()->create($data);
-        $this->syncStorefront('create');
+        defer($this->syncStorefront('create'));
 
         return $created;
     }
@@ -27,7 +25,7 @@ class StorefrontService
     public function deleteStorefront(Storefront $storefront)
     {
         $storefront->delete();
-        $this->syncStorefront('delete');
+        defer($this->syncStorefront('delete'));
     }
 
     public function getPublicStorefronts()
@@ -57,7 +55,7 @@ class StorefrontService
 
     public function getStorefronts(User $user)
     {
-        return $user->storefronts()->paginate(15);
+        return $user->storefronts()->paginate(10);
     }
 
     public function syncStorefront(string $action, ?string $entity = null)
@@ -80,7 +78,7 @@ class StorefrontService
     public function updateStorefront(Request $request, Storefront $storefront)
     {
         $storefront->update($request->only(['title', 'theme', 'is_published']));
-        $this->syncStorefront('update', $storefront->slug);
+        defer($this->syncStorefront('update', $storefront->slug));
 
         return $storefront;
     }
