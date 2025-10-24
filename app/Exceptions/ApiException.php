@@ -15,6 +15,9 @@ enum ApiErrorCode: string
     case ErrUnknown = 'Unknown error';
 
     case ErrRevalidate = 'Failed to sync storefront';
+
+    case ErrStorageLimitExceeded = 'Storage limit exceeded';
+    case ErrUploadFailed = 'Failed to upload file';
 }
 
 /**
