@@ -4,10 +4,10 @@ namespace App\Services\Media;
 
 use App\Exceptions\ApiErrorCode;
 use App\Exceptions\ApiException;
+use App\Models\Media;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class MediaService
 {
@@ -24,12 +24,22 @@ class MediaService
 
         $filename = Storage::putFile('media', $file);
         if (!$filename) {
-            throw new ApiException(ApiErrorCode::ErrUploadFailed, null, 500);
+            throw new ApiException(ApiErrorCode::ErrMediaUploadFailed, null, 500);
         };
 
         $user->update(['storage_used' => $storageUsed + $filesize]);
 
         return $user->media()->create(['name' => $filename, 'size' => $filesize]);
+    }
+
+    public function deleteMedia(User $user, Media $media)
+    {
+        if (!Storage::delete($media->name)) {
+            throw new ApiException(ApiErrorCode::ErrMediaDeleteFailed, null, 500);
+        }
+
+        $user->update(['storage_used' => $user->storage_used - $media->size]);
+        $media->delete();
     }
 
     public function getMedia(User $user)

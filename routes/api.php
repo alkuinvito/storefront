@@ -20,7 +20,6 @@ Route::prefix('/dashboard')->group(function () {
 
         Route::apiResource('storefronts.blocks', PageBlockApiController::class)->middleware('can:manage,storefront');
 
-        Route::apiResource('media', MediaApiController::class)->only(['index', 'store']);
-        Route::apiResource('media', MediaApiController::class)->only(['show', 'update', 'destroy'])->middleware('can:manage,media');
+        Route::apiResource('media', MediaApiController::class)->only(['index', 'store', 'destroy']);
     });
 });

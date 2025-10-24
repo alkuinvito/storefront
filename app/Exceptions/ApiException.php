@@ -17,7 +17,8 @@ enum ApiErrorCode: string
     case ErrRevalidate = 'Failed to sync storefront';
 
     case ErrStorageLimitExceeded = 'Storage limit exceeded';
-    case ErrUploadFailed = 'Failed to upload file';
+    case ErrMediaUploadFailed = 'Failed to upload file';
+    case ErrMediaDeleteFailed = 'Failed to delete media';
 }
 
 /**

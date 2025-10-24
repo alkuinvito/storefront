@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
+use function Illuminate\Log\log;
+
 class MediaApiController extends Controller
 {
 
@@ -20,8 +22,9 @@ class MediaApiController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(User $user)
+    public function index()
     {
+        $user = Auth::user();
         $media = $this->mediaService->getMedia($user);
 
         return response()->json(['data' => $media]);
@@ -35,7 +38,7 @@ class MediaApiController extends Controller
         $user = Auth::user();
 
         if ($user == null) {
-            throw new ApiException(ApiErrorCode::ErrUnauthorized);
+            throw new ApiException(ApiErrorCode::ErrUnauthorized, null, 401);
         }
 
         $validator = Validator::make($request->all(), [
@@ -52,26 +55,22 @@ class MediaApiController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Media $media)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Media $media)
-    {
-        //
-    }
-
-    /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Media $media)
+    public function destroy(Media $medium)
     {
-        //
+        $user = Auth::user();
+
+        if ($user == null) {
+            throw new ApiException(ApiErrorCode::ErrUnauthorized, null, 401);
+        }
+
+        if ($user->id != $medium->user_id) {
+            throw new ApiException(ApiErrorCode::ErrForbidden, null, 403);
+        }
+
+        $this->mediaService->deleteMedia($user, $medium);
+
+        return response()->json(['message' => 'Media deleted successfully'], 200);
     }
 }
